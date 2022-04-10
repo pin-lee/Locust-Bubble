@@ -6,11 +6,12 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.utils.ScreenUtils;
 
 public class Game extends ApplicationAdapter {
+	private BitmapFont font;
 	private Texture background;
 	private Texture locust;
 	private Texture barley;
@@ -24,6 +25,7 @@ public class Game extends ApplicationAdapter {
 	private Texture locustSummonUpgrade;
 	private Texture barleySaveUpgrade;
 	private Texture bubble;
+	private Texture gold;
 	private Sound portalSound;
 	private Sound harvestSound;
 	private Sound locustSound;
@@ -39,6 +41,8 @@ public class Game extends ApplicationAdapter {
 	private int locustCount = 0;
 	private int bubbleSlowdown = locustCount + 1;
 	private int barleyCounter = 0;
+	private int timer = 60;
+	private int timerFrameCounter = 0;
 	private final int goldCounter = 0;
 	private int isWonFrameCount;
 
@@ -51,22 +55,23 @@ public class Game extends ApplicationAdapter {
 	Player playerCharacter;
 	private final boolean isWon = false;
 	private int[][] villagers = {
-			{5, 400},
-			{56, 396},
-			{100, 436},
-			{170, 420},
-			{159, 351},
-			{77, 328},
-			{180, 300},
-			{147, 359},
-			{211, 340},
-			{220, 378},
-			{249, 423}
+			{4, 346},
+			{192, 305},
+			{115, 301},
+			{122, 362},
+			{67, 348},
+			{36, 404},
+			{179, 386},
+			{170, 417},
+			{221, 419},
+			{271, 412},
 	};
 
 	
 	@Override
 	public void create () {
+		font = new BitmapFont();
+		font.getData().setScale(5.0f);
 		batch = new SpriteBatch();
 		// load the images for the droplet and the bucket, 64x64 pixels each
 		background = new Texture((Gdx.files.internal("background.png")));
@@ -84,6 +89,7 @@ public class Game extends ApplicationAdapter {
 		locustSummonUpgrade = new Texture(Gdx.files.internal("locustSummonUpgrade.png"));
 		barleySaveUpgrade = new Texture(Gdx.files.internal("barleySaveUpgrade.png"));
 		bubble = new Texture(Gdx.files.internal("bubble.png"));
+		gold = new Texture(Gdx.files.internal("gold.png"));
 		// load the sound effects and the background music
 		runSound = Gdx.audio.newSound(Gdx.files.internal("runningSound.wav"));
 		portalSound = Gdx.audio.newSound(Gdx.files.internal("portalSound.wav"));
@@ -104,6 +110,8 @@ public class Game extends ApplicationAdapter {
 		bubbleX = 1024;
 		if (playerCharacter.hasBarleySave) barleyCounter = barleyCounter / 2;
 		locustCount = 0;
+		timer = 60;
+		timerFrameCounter = 0;
 	}
 
 	private void renderVillagers() {
@@ -135,25 +143,85 @@ public class Game extends ApplicationAdapter {
 
 	private void coordinateClickListen() {
 		if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
-			System.out.println("X: " + Gdx.input.getX() + "\n" + "Y: " + Gdx.input.getY());
+			//System.out.println("X: " + (1024 - Gdx.input.getX()) + " | " + "Y: " + (768 - Gdx.input.getY()));
+			System.out.println("{" + (Gdx.input.getX()) + ", " + (768 - Gdx.input.getY()) + "},");
+		}
+	}
+
+
+	// https://stackoverflow.com/questions/22550259/libgdx-play-sound-or-music-best-practice
+	// https://stackoverflow.com/questions/22296997/about-libgdx-addlistener
+
+	private void keystrokeCheck() {
+		if (playerCharacter.y > (750)) 	playerCharacter.y = 750;
+		if (playerCharacter.x < 10) 		playerCharacter.x = 10;
+		if (playerCharacter.x > (1010)) playerCharacter.x = 1010;
+		if (playerCharacter.y < 10) playerCharacter.y = 10;
+
+		// W is UP
+		if (Gdx.input.isKeyPressed(Input.Keys.W)) {
+			playerCharacter.y += 2 * playerCharacter.speedModifier;
+		}
+		// S is DOWN
+		if (Gdx.input.isKeyPressed(Input.Keys.S)) {
+			playerCharacter.y -= 2 * playerCharacter.speedModifier;
+		}
+		// A is LEFT
+		if (Gdx.input.isKeyPressed(Input.Keys.A)) {
+			playerCharacter.x -= 2 * playerCharacter.speedModifier;
+		}
+		// D is RIGHT
+		if (Gdx.input.isKeyPressed(Input.Keys.D)) {
+			playerCharacter.x += 2 * playerCharacter.speedModifier;
+		}
+		// SPACE is USE / INTERACT
+		if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
+			// Check for intractable hit-boxes / coordinate ranges.
 		}
 	}
 
 	@Override
 	public void render() {
-		ScreenUtils.clear(1, 0, 0, 1);
+		//ScreenUtils.clear(1, 0, 0, 1);
 		batch.begin();
 		checkLoss();
-		switch (state) {
-			case Running:
-				updateBubble();
+		switch (state) {	// Pause implementation from here:
+			case Running:	// https://stackoverflow.com/questions/21576181/pause-resume-a-simple-libgdx-game-for-android
+				//updateBubble();
 				backgroundSprite.draw(batch);
 				batch.draw(wizard, 336, 350);
+
+				// TIMER STUFF
+				font.draw(batch, String.valueOf(timer), 470, 760);
+				timerFrameCounter++;
+				if (timerFrameCounter == 60) {
+					timer--;
+					timerFrameCounter = 0;
+				}
+				if (timer == 0) state = State.Paused;
+
+				// COIN STUFF
+				font.draw(batch, String.valueOf(goldCounter), 700, 760);
+				batch.draw(gold, 745, 695);
+
+				// BARLEY STUFF
+				font.draw(batch, String.valueOf(barleyCounter), 45, 760);
+				batch.draw(barley, 90, 695);
+
+				// LOCUST STUFF
+				font.draw(batch, String.valueOf(locustCount), 270, 760);
+				batch.draw(locust, 315, 695);
+
 				if (isWon) animateVillagers();
 				renderVillagers();
 				batch.draw(bubble, bubbleX, 0);
 				coordinateClickListen();
+
+				keystrokeCheck();
+				batch.draw(player, playerCharacter.x, playerCharacter.y);
+
 				break;
+
 			case Paused:
 				lossScreen.draw(batch);
 				reset();
