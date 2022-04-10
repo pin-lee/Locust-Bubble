@@ -1,7 +1,7 @@
 package com.braydenl.locustbubble;
 
 public class Player {
-    public int speedModifier;
+    public double speedModifier;
     public boolean hasLocustSummon;
     public boolean hasBarleySave;
     public int x;
