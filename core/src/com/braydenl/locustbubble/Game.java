@@ -204,30 +204,31 @@ public class Game extends ApplicationAdapter {
 	// https://stackoverflow.com/questions/22296997/about-libgdx-addlistener
 
 	private void runningKeystrokeCheck() {
-		if (playerCharacter.y > (750)) 	playerCharacter.y = 750;	// "Pad" the edges of the window with clipping.
-		if (playerCharacter.x < 10) 		playerCharacter.x = 10;
-		if (playerCharacter.x > (1010)) playerCharacter.x = 1010;
-		if (playerCharacter.y < 10) playerCharacter.y = 10;
+		if (state == State.Running) {
+			if (playerCharacter.y > (750)) playerCharacter.y = 750;    // "Pad" the edges of the window with clipping.
+			if (playerCharacter.x < 10) playerCharacter.x = 10;
+			if (playerCharacter.x > (1010)) playerCharacter.x = 1010;
+			if (playerCharacter.y < 10) playerCharacter.y = 10;
 
-		// W is UP
-		if (Gdx.input.isKeyPressed(Input.Keys.W)) {
-			playerCharacter.y += 2 * playerCharacter.speedModifier;
-		}
-		// S is DOWN
-		if (Gdx.input.isKeyPressed(Input.Keys.S)) {
-			playerCharacter.y -= 2 * playerCharacter.speedModifier;
-		}
-		// A is LEFT
-		if (Gdx.input.isKeyPressed(Input.Keys.A)) {
-			playerCharacter.x -= 2 * playerCharacter.speedModifier;
-		}
-		// D is RIGHT
-		if (Gdx.input.isKeyPressed(Input.Keys.D)) {
-			playerCharacter.x += 2 * playerCharacter.speedModifier;
-		}
-		// SPACE is USE / INTERACT
-		if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
-			// Check for intractable hit-boxes / coordinate ranges.
+			// W is UP
+			if (Gdx.input.isKeyPressed(Input.Keys.W)) {
+				playerCharacter.y += 2 * playerCharacter.speedModifier;
+			}
+			// S is DOWN
+			if (Gdx.input.isKeyPressed(Input.Keys.S)) {
+				playerCharacter.y -= 2 * playerCharacter.speedModifier;
+			}
+			// A is LEFT
+			if (Gdx.input.isKeyPressed(Input.Keys.A)) {
+				playerCharacter.x -= 2 * playerCharacter.speedModifier;
+			}
+			// D is RIGHT
+			if (Gdx.input.isKeyPressed(Input.Keys.D)) {
+				playerCharacter.x += 2 * playerCharacter.speedModifier;
+			}
+			// SPACE is USE / INTERACT
+			if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
+				// Check for intractable hit-boxes / coordinate ranges.
 			/* Wizard Hit-box:
 					{333, 358},
 					{400, 358},
@@ -237,16 +238,17 @@ public class Game extends ApplicationAdapter {
 					X RANGE = [ 333 TO 400 ]
 					Y RANGE = [ 358 TO 412 ]
 			*/
-			// Checks for Wizard hit-box
-			if (
-					(playerCharacter.x >= 323)
-					&& (playerCharacter.x <= 410)
-					&& (playerCharacter.y >= 340)
-					&& (playerCharacter.y <= 422)
-			) {
-				state = State.Shopping;
-			}
+				// Checks for Wizard hit-box
+				if (
+						(playerCharacter.x >= 323)
+								&& (playerCharacter.x <= 410)
+								&& (playerCharacter.y >= 340)
+								&& (playerCharacter.y <= 422)
+				) {
+					state = State.Shopping;
+				}
 
+			}
 		}
 	}
 
@@ -273,28 +275,28 @@ public class Game extends ApplicationAdapter {
 			playerCharacter.x += 2 * playerCharacter.speedModifier;
 		}
 		if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
-			if (((playerCharacter.x >= 605) && (playerCharacter.x <= 675) && (playerCharacter.y >= 436)) && (Gdx.input.getY() <= 506)) {
+			if (((playerCharacter.x >= 605) && (playerCharacter.x <= 675) && (playerCharacter.y >= 436)) && (playerCharacter.y <= 506)) {
 				if (goldCounter >= 3) {
 					upgradeSound.play();
 					goldCounter -= 3;
 					playerCharacter.speedModifier += 0.5;
 				}
 			}
-			if (((playerCharacter.x >= 819) && (playerCharacter.x <= 885) && (playerCharacter.y >= 334)) && (Gdx.input.getY() <= 403)) {
+			if (((playerCharacter.x >= 819) && (playerCharacter.x <= 885) && (playerCharacter.y >= 334)) && (playerCharacter.y <= 403)) {
 				if (goldCounter >= 5) {
 					upgradeSound.play();
 					goldCounter -= 5;
 					playerCharacter.hasBarleySave = true;
 				}
 			}
-			if (((playerCharacter.x >= 811) && (playerCharacter.x <= 883) && (playerCharacter.y >= 239)) && (Gdx.input.getY() <= 306)) {
+			if (((playerCharacter.x >= 811) && (playerCharacter.x <= 883) && (playerCharacter.y >= 239)) && (playerCharacter.y <= 306)) {
 				if (goldCounter >= 5) {
 					upgradeSound.play();
 					goldCounter -= 5;
 					playerCharacter.hasLocustSummon = true;
 				}
 			}
-			if (((playerCharacter.x >= 811) && (playerCharacter.x <= 887) && (playerCharacter.y >= 58)) && (Gdx.input.getY() <= 110)) {
+			if (((playerCharacter.x >= 811) && (playerCharacter.x <= 887) && (playerCharacter.y >= 58)) && (playerCharacter.y <= 110)) {
 				if (barleyCounter >= 1) {
 					locustCount += barleyCounter;
 					bubbleSlowdown = locustCount + 2;
@@ -339,7 +341,6 @@ public class Game extends ApplicationAdapter {
 				font.draw(batch, String.valueOf(locustCount), 270, 760);
 				batch.draw(locust, 320, 695);
 
-				if (isWon) animateVillagers();	// Handles win sequence
 
 				renderVillagers();
 
@@ -392,11 +393,13 @@ public class Game extends ApplicationAdapter {
 				}
 
 			case Won:
-				winScreen.draw(batch);
-
-				hardReset();
+				backgroundSprite.draw(batch);
+				batch.draw(wizard, 336, 350);
+				animateVillagers();
 				if(Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)) {
 					state = State.Running;
+					winScreen.draw(batch);
+					hardReset();
 					break;
 				}
 
